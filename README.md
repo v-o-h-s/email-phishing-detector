@@ -1,5 +1,7 @@
 # Email Spoofing Detector — Chrome Extension
 
+Optimized for Gmail on the web (mail.google.com). Other webmail UIs may work, but Gmail is the primary target.
+
 ## Tech Stack
 
 | Tool | Role |
@@ -27,7 +29,7 @@ c2-email-spoofing-detector/
 │   │   └── Popup.tsx         # React UI component
 │   │
 │   ├── content/
-│   │   └── index.ts          # Content script — runs inside Gmail/Outlook tabs
+│   │   └── index.ts          # Content script — optimized for Gmail tabs
 │   │
 │   └── background/
 │       ├── index.ts          # Service worker — background logic
@@ -51,7 +53,7 @@ c2-email-spoofing-detector/
 Chrome extensions run in three separate isolated contexts that cannot share memory. They communicate via message passing:
 
 ```
-Gmail/Outlook tab          background service worker        popup UI
+Gmail tab                 background service worker        popup UI
 ─────────────────          ────────────────────────         ────────
 content/index.ts           background/index.ts              popup/Popup.tsx
        │                             │                            │
@@ -66,7 +68,7 @@ content/index.ts           background/index.ts              popup/Popup.tsx
        │                             │                            │ renders UI
 ```
 
-- **Content script** — injected into Gmail/Outlook, reads email data from the page
+- **Content script** — injected into Gmail, reads email data from the page
 - **Background service worker** — receives data from content script, runs analysis, stores results, updates the extension badge
 - **Popup UI** — shown when you click the extension icon, fetches the cached result from the background and displays it
 

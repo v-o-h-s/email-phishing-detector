@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 body {
-  @apply bg-[#0a0c10] text-[#f3f4f6] antialiased;
+  @apply bg-black text-zinc-300 antialiased font-mono;
   width: 360px;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
