@@ -1,5 +1,5 @@
 {
-  "name": "c2-email-spoofing-detector",
+  "name": "email-phishing-detector",
   "module": "index.ts",
   "type": "module",
   "private": true,
