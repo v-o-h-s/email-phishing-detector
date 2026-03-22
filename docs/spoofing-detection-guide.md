@@ -53,6 +53,12 @@ Here is how an attacker exploits this without hacking the victim's DNS:
 
 ## 3. Heuristics & Local Analysis Tools (Extension Context)
 
+### Extension Detection Layers
+The extension currently exposes two explicit detection layers:
+
+1. **Checking SPF/DMARC:** Parses `Authentication-Results` (and related headers) to score SPF, DKIM, and DMARC outcomes.
+2. **Reply-To Mismatch:** Compares the `From:` domain to the `Reply-To:` domain and flags mismatches (including subdomain alignment checks).
+
 Even with DMARC, attackers find ways to trick users. Email clients and security extensions (like the `c2-email-spoofing-detector`) look at other indicators:
 
 1. **Display Name Spoofing:** The attacker creates a free Gmail account but changes their "Display Name" to look official.

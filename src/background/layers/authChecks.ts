@@ -11,7 +11,7 @@ type AuthScore = {
   reasons: string[];
 };
 
-export default async function analyzeSpoofing(
+export default async function analyzeAuthChecks(
   authHeader: string | null | undefined
 ): Promise<AnalysisResultSuccess> {
   if (!authHeader) {
@@ -20,8 +20,8 @@ export default async function analyzeSpoofing(
   const authResults = parseAuthResults(authHeader);
   const analysis = scoreAuthResults(authResults);
   return {
-    reasons: { [AnalysisLayers.SPOOFING]: analysis.reasons },
-    scores: { [AnalysisLayers.SPOOFING]: analysis.score },
+    reasons: { [AnalysisLayers.AUTH_CHECKS]: analysis.reasons },
+    scores: { [AnalysisLayers.AUTH_CHECKS]: analysis.score },
   };
 }
 

@@ -1,7 +1,7 @@
 import type { AnalysisResult, ExtensionMessage } from "../shared/types";
 import {
   extractAuthHeaderFromDom,
-  fetchAuthHeaderFromStandardView,
+  fetchHeadersFromStandardView,
 } from "./lib/lib";
 import { Panel } from "./lib/panel";
 let lastSeenId: string | null = null;
@@ -24,13 +24,14 @@ function mutationCallback(): void {
 }
 
 async function analyzeMessage(messageElement: Element, messageId: string): Promise<void> {
-  const authHeader =
-    (await fetchAuthHeaderFromStandardView(messageElement)) ??
-    extractAuthHeaderFromDom();
+  const standardHeaders = await fetchHeadersFromStandardView(messageElement);
+  const authHeader = standardHeaders?.authHeader ?? extractAuthHeaderFromDom();
 
   const message: ExtensionMessage = {
     type: "ANALYZE_EMAIL",
     authHeader,
+    fromHeader: standardHeaders?.fromHeader ?? null,
+    replyToHeader: standardHeaders?.replyToHeader ?? null,
   };
 
   chrome.runtime.sendMessage(

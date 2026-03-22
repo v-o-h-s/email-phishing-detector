@@ -189,6 +189,7 @@ export class Panel {
     }
   `;
     document.head.appendChild(style);
+    
   }
 
   private static readonly ignoredMessageIds = new Set<string>();

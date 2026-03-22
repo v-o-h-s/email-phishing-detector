@@ -72,6 +72,10 @@ content/index.ts           background/index.ts              popup/Popup.tsx
 - **Background service worker** — receives data from content script, runs analysis, stores results, updates the extension badge
 - **Popup UI** — shown when you click the extension icon, fetches the cached result from the background and displays it
 
+Current detection layers:
+- **Checking SPF/DMARC (and related auth checks)** — parses `Authentication-Results` to score SPF, DKIM, and DMARC outcomes
+- **Reply-To Mismatch** — compares `From:` and `Reply-To:` domains and flags mismatches (including subdomain alignment)
+
 ---
 
 ## Note on Current Code

@@ -16,9 +16,16 @@ export function extractAuthHeaderFromDom(): string | null {
   );
 }
 
-export async function fetchAuthHeaderFromStandardView(
+export type ParsedHeaders = {
+  authHeader: string | null;
+  fromHeader: string | null;
+  replyToHeader: string | null;
+};
+
+export async function fetchHeadersFromStandardView(
   messageElement: Element,
-): Promise<string | null> {
+): Promise<ParsedHeaders | null> {
+  // get the messageId and the ik
   const messageId = getGmailMessageId(messageElement) ?? getGmailThreadId(messageElement);
   const ik = getGmailIk();
   if (!messageId || !ik) return null;
@@ -33,12 +40,16 @@ export async function fetchAuthHeaderFromStandardView(
     const response = await fetch(url.toString(), { credentials: "include" });
     if (!response.ok) return null;
     const text = await response.text();
-    return (
+    const authHeader =
       extractHeaderBlock(text, "Authentication-Results") ??
       extractHeaderBlock(text, "ARC-Authentication-Results") ??
       extractHeaderBlock(text, "Received-SPF") ??
-      null
-    );
+      null;
+    return {
+      authHeader,
+      fromHeader: extractHeaderBlock(text, "From"),
+      replyToHeader: extractHeaderBlock(text, "Reply-To"),
+    };
   } catch {
     return null;
   }

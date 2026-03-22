@@ -1,5 +1,6 @@
 export enum AnalysisLayers {
-  SPOOFING = "spoofing",
+  AUTH_CHECKS = "checking spf/dmarc",
+  REPLY_TO = "reply-to mismatch",
 }
 
 export interface AnalysisResultSuccess {
@@ -12,7 +13,12 @@ export interface AnalysisResultFail {
 export type AnalysisResult = AnalysisResultFail | AnalysisResultSuccess;
 
 export type ExtensionMessage =
-  | { type: "ANALYZE_EMAIL"; authHeader?: string | null }
+  | {
+      type: "ANALYZE_EMAIL";
+      authHeader?: string | null;
+      fromHeader?: string | null;
+      replyToHeader?: string | null;
+    }
   | { type: "GET_ANALYSIS" }
   | { type: "ANALYSIS_RESULT"; payload: any };
 
