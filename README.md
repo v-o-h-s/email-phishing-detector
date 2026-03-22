@@ -78,12 +78,6 @@ Current detection layers:
 
 ---
 
-## Note on Current Code
-
-The logic currently implemented in this repo is a **template/placeholder only**. It is not the final product and does not reflect the actual intended design. Feel free to rethink and reimplement the detection logic, UI, and structure as you see fit.
-
----
-
 ## Why This Workflow
 
 Chrome extensions loaded via "Load unpacked" in developer mode do not auto-update from a remote server. There is no way for a CI/CD pipeline to push changes directly into a teammate's browser. Each developer must manually pull the latest code, rebuild, and reload the extension in Chrome. This workflow ensures everyone is always testing the latest version from `develop` without breaking each other's work.
