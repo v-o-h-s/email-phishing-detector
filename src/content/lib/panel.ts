@@ -2,7 +2,11 @@ import type { AnalysisResultSuccess } from "../../shared/types";
 import { calculateTotalScore } from "./lib";
 
 export class Panel {
-  public static injectPanel(result: AnalysisResultSuccess, messageId: string): void {
+  public static injectPanel(
+    result: AnalysisResultSuccess,
+    messageId: string,
+    messageElement?: Element,
+  ): void {
     document.getElementById("spoof-panel")?.remove();
     Panel.ensurePanelStyles();
 
@@ -54,11 +58,15 @@ export class Panel {
       panel.remove();
     });
 
-    const emailBody = document.querySelector(".a3s");
-    emailBody?.prepend(panel);
+    const target = Panel.getInjectionTarget(messageElement);
+    target?.prepend(panel);
   }
 
-  public static injectErrorPanel(errorMessage: string, messageId: string): void {
+  public static injectErrorPanel(
+    errorMessage: string,
+    messageId: string,
+    messageElement?: Element,
+  ): void {
     document.getElementById("spoof-panel")?.remove();
     Panel.ensurePanelStyles();
 
@@ -93,8 +101,8 @@ export class Panel {
       panel.remove();
     });
 
-    const emailBody = document.querySelector(".a3s");
-    emailBody?.prepend(panel);
+    const target = Panel.getInjectionTarget(messageElement);
+    target?.prepend(panel);
   }
 
   public static isMessageIgnored(messageId: string): boolean {
@@ -193,4 +201,23 @@ export class Panel {
   }
 
   private static readonly ignoredMessageIds = new Set<string>();
+
+  private static getInjectionTarget(messageElement?: Element | null): Element | null {
+    // Gmail DOM changes frequently; try the known body container first.
+    if (messageElement) {
+      const within = messageElement.querySelector(".a3s");
+      if (within) return within;
+      // If `.a3s` isn't present, inject directly into the message element.
+      return messageElement;
+    }
+
+    const emailBody = document.querySelector(".a3s");
+    if (emailBody) return emailBody;
+
+    // Broad fallback for layout changes.
+    const main = document.querySelector("[role='main']");
+    if (main) return main;
+
+    return document.body;
+  }
 }
