@@ -4,6 +4,10 @@ import {
   fetchHeadersFromStandardView,
 } from "./lib/lib";
 import { Panel } from "./lib/panel";
+
+// Log that content script is active
+console.log(`[Content Script] Loaded. Extension ID: ${chrome.runtime.id}`);
+
 let lastSeenId: string | null = null;
 
 function mutationCallback(): void {
@@ -32,21 +36,29 @@ async function analyzeMessage(messageElement: Element, messageId: string): Promi
     authHeader,
     fromHeader: standardHeaders?.fromHeader ?? null,
     replyToHeader: standardHeaders?.replyToHeader ?? null,
+    dateHeader: standardHeaders?.dateHeader ?? null,
+    receivedHeaders: standardHeaders?.receivedHeaders ?? [],
   };
 
-  chrome.runtime.sendMessage(
-    message,
-    (result?: AnalysisResult) => {
-      if (!result) return;
-      if ("error" in result) {
-        Panel.injectErrorPanel(result.error, messageId);
-        return;
-      }
-      Panel.injectPanel(result, messageId);
-    },
-  );
+  try {
+    chrome.runtime.sendMessage(
+      message,
+      (result?: AnalysisResult) => {
+        if (!result) return;
+        if ("error" in result) {
+          Panel.injectErrorPanel(result.error, messageId, messageElement);
+          return;
+        }
+        Panel.injectPanel(result, messageId, messageElement);
+      },
+    );
+  } catch (err) {
+    console.error("[Content] Failed to send message to background:", err);
+    Panel.injectErrorPanel("Failed to analyze email", messageId, messageElement);
+  }
 }
 
 // observe changes in the gmail pages and fires(run the callback) everytime the DOM changes
 const observer = new MutationObserver(mutationCallback);
 observer.observe(document.body, { childList: true, subtree: true });
+console.log("[Content Script] Mutation observer started for Gmail page monitoring");

@@ -20,6 +20,8 @@ export type ParsedHeaders = {
   authHeader: string | null;
   fromHeader: string | null;
   replyToHeader: string | null;
+  dateHeader: string | null;
+  receivedHeaders: string[];
 };
 
 export async function fetchHeadersFromStandardView(
@@ -49,6 +51,8 @@ export async function fetchHeadersFromStandardView(
       authHeader,
       fromHeader: extractHeaderBlock(text, "From"),
       replyToHeader: extractHeaderBlock(text, "Reply-To"),
+      dateHeader: extractHeaderBlock(text, "Date"),
+      receivedHeaders: extractHeaderBlocks(text, "Received"),
     };
   } catch {
     return null;
@@ -114,4 +118,12 @@ export function extractHeaderBlock(text: string, headerName: string): string | n
   );
   const match = text.match(pattern);
   return match?.[0] ?? null;
+}
+
+export function extractHeaderBlocks(text: string, headerName: string): string[] {
+  const pattern = new RegExp(
+    `^${headerName}:.*(?:\\r?\\n[\\t ].*)*`,
+    "gmi",
+  );
+  return Array.from(text.matchAll(pattern)).map((m) => m[0]).filter(Boolean);
 }
