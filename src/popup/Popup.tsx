@@ -153,6 +153,12 @@ export default function Popup(): React.JSX.Element {
       .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
     : [];
 
+  const layerEntries = analysis
+    ? (Object.entries(analysis.scores) as Array<[AnalysisLayers, number | undefined]>)
+        .filter(([, v]) => v != null)
+        .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+    : [];
+
   return (
     <div className="relative w-[360px] h-[600px] bg-[#020814] text-slate-200 flex flex-col select-none overflow-hidden">
 
