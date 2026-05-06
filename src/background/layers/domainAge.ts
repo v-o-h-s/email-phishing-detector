@@ -1,6 +1,7 @@
 type LayerScore = {
   score: number;
   reasons: string[];
+  ageDays?: number | null;
 };
 
 type RdapEvent = {
@@ -16,10 +17,18 @@ export default async function analyzeDomainAge(
   fromHeader: string | null | undefined,
 ): Promise<LayerScore> {
   const domain = extractDomain(fromHeader);
-  if (!domain) return { score: 0, reasons: [] };
+  if (!domain) {
+    return { score: 0, reasons: ["Test passed: sender domain could not be extracted."], ageDays: null };
+  }
 
   // Avoid noisy checks on major freemail providers.
-  if (isFreemail(domain)) return { score: 0, reasons: [] };
+  if (isFreemail(domain)) {
+    return {
+      score: 0,
+      reasons: ["Test passed: domain-age risk check skipped for major freemail domain."],
+      ageDays: null,
+    };
+  }
 
   const ageDays = await getDomainAgeDays(domain);
   if (ageDays == null) {
@@ -27,13 +36,13 @@ export default async function analyzeDomainAge(
   }
 
   if (ageDays < 30) {
-    return { score: 15, reasons: [`Domain is very new (${ageDays} days old)`] };
+    return { score: 15, reasons: [`Domain is very new (${ageDays} days old)`], ageDays };
   }
   if (ageDays < 180) {
-    return { score: 8, reasons: [`Domain is relatively new (${ageDays} days old)`] };
+    return { score: 8, reasons: [`Domain is relatively new (${ageDays} days old)`], ageDays };
   }
 
-  return { score: 0, reasons: [] };
+  return { score: 0, reasons: [`Test passed: domain age appears established (${ageDays} days old).`], ageDays };
 }
 
 function extractDomain(headerValue: string | null | undefined): string | null {
@@ -85,9 +94,16 @@ async function getDomainAgeDays(domain: string): Promise<number | null> {
       return null;
     }
     const data = (await res.json()) as RdapResponse;
-    const registration = (data.events ?? []).find(
-      (e) => e.eventAction?.toLowerCase() === "registration",
-    );
+    const registration = (data.events ?? []).find((e) => {
+      const action = e.eventAction?.toLowerCase().trim() ?? "";
+      return (
+        action === "registration" ||
+        action === "registered" ||
+        action === "domain registration" ||
+        action === "creation" ||
+        action === "created"
+      );
+    });
     const dateStr = registration?.eventDate;
     if (!dateStr) {
       await chrome.storage.local.set({ [cacheKey]: { checkedAt: now, ageDays: null } });
