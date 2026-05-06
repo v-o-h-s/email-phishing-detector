@@ -15,7 +15,14 @@ export default async function analyzeAuthChecks(
   authHeader: string | null | undefined
 ): Promise<AnalysisResultSuccess> {
   if (!authHeader) {
-    throw new Error("Authentication headers not found in DOM");
+    return {
+      reasons: {
+        [AnalysisLayers.AUTH_CHECKS]: [
+          "Authentication headers not available in this message view; auth checks skipped.",
+        ],
+      },
+      scores: { [AnalysisLayers.AUTH_CHECKS]: 0 },
+    };
   }
   const authResults = parseAuthResults(authHeader);
   const analysis = scoreAuthResults(authResults);

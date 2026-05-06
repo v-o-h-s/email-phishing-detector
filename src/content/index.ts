@@ -1,6 +1,9 @@
 import type { AnalysisResult, ExtensionMessage } from "../shared/types";
 import {
   extractAuthHeaderFromDom,
+  extractBodyLinks,
+  extractImageInfo,
+  extractBodyText,
   fetchHeadersFromStandardView,
 } from "./lib/lib";
 import { Panel } from "./lib/panel";
@@ -28,6 +31,20 @@ function mutationCallback(): void {
 }
 
 async function analyzeMessage(messageElement: Element, messageId: string): Promise<void> {
+  const settingsResponse = await new Promise<ExtensionMessage | null>((resolve) => {
+    try {
+      chrome.runtime.sendMessage({ type: "GET_SETTINGS" } as ExtensionMessage, (response?: ExtensionMessage) => {
+        resolve(response ?? null);
+      });
+    } catch {
+      resolve(null);
+    }
+  });
+  if (settingsResponse?.type === "SETTINGS_RESULT" && !settingsResponse.payload.extensionEnabled) {
+    Panel.removePanel();
+    return;
+  }
+
   const standardHeaders = await fetchHeadersFromStandardView(messageElement);
   const authHeader = standardHeaders?.authHeader ?? extractAuthHeaderFromDom();
 
@@ -38,6 +55,9 @@ async function analyzeMessage(messageElement: Element, messageId: string): Promi
     replyToHeader: standardHeaders?.replyToHeader ?? null,
     dateHeader: standardHeaders?.dateHeader ?? null,
     receivedHeaders: standardHeaders?.receivedHeaders ?? [],
+    links: extractBodyLinks(messageElement),
+    bodyText: extractBodyText(messageElement),
+    imageInfo: extractImageInfo(messageElement),
   };
 
   try {

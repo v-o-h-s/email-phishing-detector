@@ -1,14 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Email Phishing Detector",
+  "name": "E-Sentinel",
+  "short_name": "E-Sentinel",
   "version": "1.0.0",
-  "description": "Detects email Phishing attempts by analyzing email headers and authentication records.",
+  "description": "AI phishing detector for Gmail with layered spoofing analysis.",
   "permissions": ["activeTab", "storage", "tabs", "notifications"],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://rdap.org/*",
     "https://cdn.jsdelivr.net/*",
-    "http://downloads.majestic.com/*"
+    "http://downloads.majestic.com/*",
+    "https://safebrowsing.googleapis.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -29,7 +32,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Email Phishing Detector"
+    "default_title": "E-Sentinel"
   },
   "icons": {
     "16": "icons/icon16.png",

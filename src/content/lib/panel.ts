@@ -1,23 +1,37 @@
-import type { AnalysisResultSuccess } from "../../shared/types";
+import type { AnalysisResultSuccess, SenderReputationSummary } from "../../shared/types";
 import { calculateTotalScore } from "./lib";
 
 export class Panel {
+  public static removePanel(): void {
+    document.getElementById("spoof-panel")?.remove();
+  }
+
   public static injectPanel(
     result: AnalysisResultSuccess,
     messageId: string,
     messageElement?: Element,
   ): void {
-    document.getElementById("spoof-panel")?.remove();
+    Panel.removePanel();
     Panel.ensurePanelStyles();
 
     const totalScore = calculateTotalScore(result.scores);
+    const senderDomain = result.meta?.senderDomain ?? null;
+    const reportUrl = result.meta?.reportUrl ?? null;
+    const ageDays = result.meta?.domainAgeDays;
+    const rep = result.meta?.senderReputation;
+    const timeline = Panel.renderDomainTimeline(ageDays);
+    const reputationBadges = Panel.renderReputationBadges(rep);
     const testItems = Object.entries(result.scores)
       .filter(([, value]) => value != null)
       .map(([layer, value]) => {
         const reasons = result.reasons[layer as keyof typeof result.reasons] ?? [];
+        const fallback =
+          (value ?? 0) === 0
+            ? "Test passed: no suspicious signals detected."
+            : "Layer triggered, but no details were returned.";
         const reasonsList = reasons.length
           ? reasons.map((reason) => `<li>${reason}</li>`).join("")
-          : "<li>No reasons provided</li>";
+          : `<li>${fallback}</li>`;
         return `
           <details class="spoof-detail">
             <summary class="spoof-summary">${layer} — Score: ${value}</summary>
@@ -39,8 +53,16 @@ export class Panel {
         </div>
       </div>
       <div class="spoof-score">Overall Score: ${totalScore}%</div>
+      ${timeline}
+      ${reputationBadges}
       <div class="spoof-section">Tests</div>
       <div class="spoof-tests">${testItems || "<div>No tests available</div>"}</div>
+      ${reportUrl && senderDomain ? `
+        <div class="spoof-section">Actions</div>
+        <a class="spoof-button spoof-link-button" data-action="report" href="${reportUrl}" target="_blank" rel="noopener noreferrer">
+          Report as phishing (${senderDomain})
+        </a>
+      ` : ""}
     `;
 
     const closeButton = panel.querySelector<HTMLButtonElement>(
@@ -57,6 +79,10 @@ export class Panel {
       Panel.ignoreMessage(messageId);
       panel.remove();
     });
+    const reportButton = panel.querySelector<HTMLAnchorElement>("[data-action='report']");
+    reportButton?.addEventListener("click", () => {
+      // Keep panel open; user may want to inspect details while reporting.
+    });
 
     const target = Panel.getInjectionTarget(messageElement);
     target?.prepend(panel);
@@ -67,7 +93,7 @@ export class Panel {
     messageId: string,
     messageElement?: Element,
   ): void {
-    document.getElementById("spoof-panel")?.remove();
+    Panel.removePanel();
     Panel.ensurePanelStyles();
 
     const panel = document.createElement("div");
@@ -180,6 +206,27 @@ export class Panel {
       flex-direction: column;
       gap: 8px;
     }
+    .spoof-meta {
+      border: 1px solid #27272a;
+      padding: 8px;
+      margin: 6px 0;
+      font-size: 11px;
+      color: #d4d4d8;
+    }
+    .spoof-badges {
+      display: flex;
+      gap: 8px;
+      margin: 6px 0;
+      flex-wrap: wrap;
+    }
+    .spoof-badge {
+      border: 1px solid #3f3f46;
+      padding: 2px 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #a1a1aa;
+    }
     .spoof-detail {
       border: 1px solid #27272a;
       padding: 6px 8px;
@@ -195,12 +242,39 @@ export class Panel {
     .spoof-summary::-webkit-details-marker {
       display: none;
     }
+    .spoof-link-button {
+      display: inline-block;
+      text-decoration: none;
+      margin-top: 4px;
+    }
   `;
     document.head.appendChild(style);
     
   }
 
   private static readonly ignoredMessageIds = new Set<string>();
+
+  private static renderDomainTimeline(ageDays?: number | null): string {
+    if (ageDays == null) return "";
+    if (ageDays < 30) {
+      return `<div class="spoof-meta">Domain registered ${ageDays} days ago 🔴</div>`;
+    }
+    if (ageDays < 180) {
+      return `<div class="spoof-meta">Domain registered ${ageDays} days ago 🟠</div>`;
+    }
+    return `<div class="spoof-meta">Domain registered ${ageDays} days ago 🟢</div>`;
+  }
+
+  private static renderReputationBadges(
+    rep: SenderReputationSummary | null | undefined,
+  ): string {
+    if (!rep) return "";
+    const badges: string[] = [];
+    if (rep.firstContact) badges.push(`<span class="spoof-badge">First contact</span>`);
+    if (rep.knownSafeSender) badges.push(`<span class="spoof-badge">Known safe sender</span>`);
+    if (!badges.length) return "";
+    return `<div class="spoof-badges">${badges.join("")}</div>`;
+  }
 
   private static getInjectionTarget(messageElement?: Element | null): Element | null {
     // Gmail DOM changes frequently; try the known body container first.
