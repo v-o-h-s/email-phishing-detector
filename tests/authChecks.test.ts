@@ -17,9 +17,12 @@ describe("analyzeAuthChecks", () => {
     expect(reasons.join(" ")).toContain("DMARC");
   });
 
-  test("throws when auth header is missing", async () => {
-    await expect(analyzeAuthChecks(null)).rejects.toThrow(
-      "Authentication headers not found in DOM",
-    );
+  test("returns zero score when auth header is missing", async () => {
+    const result = await analyzeAuthChecks(null);
+    const reasons = result.reasons[AnalysisLayers.AUTH_CHECKS] ?? [];
+    const score = result.scores[AnalysisLayers.AUTH_CHECKS];
+
+    expect(score).toBe(0);
+    expect(reasons.join(" ")).toContain("auth checks skipped");
   });
 });
