@@ -1,4 +1,5 @@
 import type { AnalysisResultSuccess } from "../../shared/types";
+import { calculateCompositeScore } from "../../shared/scoring";
 import {
   extractHttpUrlsFromText,
   mergeUniqueUrls,
@@ -8,7 +9,7 @@ import {
 export function calculateTotalScore(
   scores: AnalysisResultSuccess["scores"],
 ): number {
-  return Object.values(scores).reduce((total, value) => total + (value ?? 0), 0);
+  return calculateCompositeScore(scores);
 }
 
 export function extractAuthHeaderFromDom(): string | null {

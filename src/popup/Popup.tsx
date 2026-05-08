@@ -8,7 +8,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldX,
-  Terminal,
   Wifi,
 } from "lucide-react";
 import {
@@ -146,14 +145,7 @@ export default function Popup(): React.JSX.Element {
   // Gemini toggle controls both API-key forms:
   // - OFF: hide both key forms
   // - ON: show both Safe Browsing + Gemini key forms
-  const showApiKeys = isBodyLayerEnabled && settings.geminiConsent;
-  const layerEntries = analysis
-    ? (Object.entries(analysis.scores) as Array<[AnalysisLayers, number | undefined]>)
-      .filter(([, v]) => v != null)
-      .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
-    : [];
-
-  const layerEntries = analysis
+  const showApiKeys = isBodyLayerEnabled && settings.geminiConsent;  const layerEntries = analysis
     ? (Object.entries(analysis.scores) as Array<[AnalysisLayers, number | undefined]>)
         .filter(([, v]) => v != null)
         .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))

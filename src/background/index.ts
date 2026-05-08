@@ -9,6 +9,7 @@ import type {
 } from "../shared/types";
 import { AnalysisLayers } from "../shared/types";
 import { DEFAULT_SETTINGS, mergeSettings, SETTINGS_STORAGE_KEY } from "../shared/settings";
+import { calculateCompositeScore, getStatus } from "../shared/scoring";
 import analyzeAuthChecks from "./layers/authChecks";
 import analyzeReplyTo from "./layers/replyTo";
 import analyzeDisplayName from "./layers/displayName";
@@ -275,12 +276,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 function toSnapshot(result: AnalysisResultSuccess): AnalysisSnapshot {
-  const score = Object.values(result.scores).reduce((t, v) => t + (v ?? 0), 0);
-  const status: AnalysisSnapshot["status"] =
-    score >= 60 ? "danger" : score >= 30 ? "warning" : "safe";
+  const score = calculateCompositeScore(result.scores);
   return {
-    status,
-    score: Math.min(score, 100),
+    status: getStatus(score),
+    score,
     reasons: result.reasons,
     scores: result.scores,
     detectedAt: Date.now(),
